@@ -9,11 +9,28 @@ use x86_64::{
     VirtAddr,
 };
 use linked_list_allocator::LockedHeap;
-use pc_keyboard::KeyCode::P;
+
+pub mod bump;
 
 pub const HEAP_START: usize = 0x_4444_4444_0000;
 pub const HEAP_SIZE: usize = 100 * 1024; // 100 KiB
 pub struct Dummy;
+
+pub struct Locked<A> {
+    inner: spin::Mutex<A>,
+}
+
+impl<A> Locked<A> {
+    pub const fn new(inner: A) -> Self {
+        Locked {
+            inner: spin::Mutex::new(inner),
+        }
+    }
+
+    pub fn lock(&self) -> spin::MutexGuard<A> {
+        self.inner.lock()
+    }
+}
 
 unsafe impl GlobalAlloc for Dummy {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
@@ -51,4 +68,15 @@ pub fn init_heap(mapper: &mut impl Mapper<Size4KiB>, frame_allocator: &mut impl 
     }
 
     Ok(())
+}
+
+fn align_up(addr: usize, align: usize) -> usize {
+    // let remainder = addr & align;
+    // if remainder == 0 {
+    //     addr
+    // } else {
+    //     addr - remainder + align
+    // }
+
+    (addr + align - 1) & !(align - 1)
 }
