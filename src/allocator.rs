@@ -9,6 +9,7 @@ use x86_64::{
     VirtAddr,
 };
 use linked_list_allocator::LockedHeap;
+use bump::BumpAllocator;
 
 pub mod bump;
 
@@ -43,7 +44,7 @@ unsafe impl GlobalAlloc for Dummy {
 }
 
 #[global_allocator]
-static ALLOCATOR: LockedHeap = LockedHeap::empty();
+static ALLOCATOR: Locked<BumpAllocator> = Locked::new(BumpAllocator::new());
 
 pub fn init_heap(mapper: &mut impl Mapper<Size4KiB>, frame_allocator: &mut impl FrameAllocator<Size4KiB>)
     -> Result<(), MapToError<Size4KiB>> {
