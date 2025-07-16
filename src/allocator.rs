@@ -11,9 +11,11 @@ use x86_64::{
 use linked_list_allocator::LockedHeap;
 use bump::BumpAllocator;
 use linked_list::LinkedListAllocator;
+use fixed_size_block::FixedSizeBlockAllocator;
 
 pub mod bump;
 pub mod linked_list;
+pub mod fixed_size_block;
 
 pub const HEAP_START: usize = 0x_4444_4444_0000;
 pub const HEAP_SIZE: usize = 100 * 1024; // 100 KiB
@@ -41,12 +43,13 @@ unsafe impl GlobalAlloc for Dummy {
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-        panic!("dealloc should never be called")
+        panic!("dealloc should never be called");
     }
 }
 
 #[global_allocator]
-static ALLOCATOR: Locked<LinkedListAllocator> = Locked::new(LinkedListAllocator::new());
+static ALLOCATOR: Locked<FixedSizeBlockAllocator> = Locked::new(FixedSizeBlockAllocator::new());
+//static ALLOCATOR: Locked<LinkedListAllocator> = Locked::new(LinkedListAllocator::new());
 //static ALLOCATOR: Locked<BumpAllocator> = Locked::new(BumpAllocator::new());
 
 pub fn init_heap(mapper: &mut impl Mapper<Size4KiB>, frame_allocator: &mut impl FrameAllocator<Size4KiB>)
