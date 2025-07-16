@@ -111,6 +111,15 @@ impl Writer {
             self.buffer.chars[row][col].write(blank);
         }
     }
+    
+    fn draw_player(&mut self, row: usize, col: usize) {
+        let player = ScreenChar {
+            ascii_character: b'#',
+            color_code: self.color_code,
+        };
+        
+        self.buffer.chars[row][col].write(player);
+    }
 }
 
 impl fmt::Write for Writer {
@@ -176,6 +185,26 @@ fn test_println_output() {
             assert_eq!(char::from(screen_char.ascii_character), c);
         }
     });
+}
+
+pub fn clear_row(row: usize) {
+    let mut writer = Writer {
+        column_position: 0,
+        color_code: ColorCode::new(Color::Yellow, Color::Black),
+        buffer: unsafe {&mut *(0xb8000 as *mut Buffer)},
+    };
+
+    writer.clear_row(row);
+}
+
+pub fn draw_player(row: usize, col: usize) {
+    let mut writer = Writer {
+        column_position: 0,
+        color_code: ColorCode::new(Color::Yellow, Color::Black),
+        buffer: unsafe {&mut *(0xb8000 as *mut Buffer)},
+    };
+    
+    writer.draw_player(row, col);
 }
 
 // pub fn print_something() {
