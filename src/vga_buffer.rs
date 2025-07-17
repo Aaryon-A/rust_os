@@ -47,6 +47,9 @@ struct ScreenChar {
 const BUFFER_HEIGHT: usize = 25;
 const BUFFER_WIDTH: usize = 80;
 
+const WIDTH: usize = 20;
+const HEIGHT: usize = 30;
+
 #[repr(transparent)]
 struct Buffer {
     chars: [[Volatile<ScreenChar>; BUFFER_WIDTH]; BUFFER_HEIGHT],
@@ -111,14 +114,31 @@ impl Writer {
             self.buffer.chars[row][col].write(blank);
         }
     }
-    
+
     fn draw_player(&mut self, row: usize, col: usize) {
         let player = ScreenChar {
+            ascii_character: b'@',
+            color_code: self.color_code,
+        };
+
+        self.buffer.chars[row][col].write(player);
+    }
+
+    fn draw_board(&mut self, row: usize, col: usize, space: bool) {
+        let board = ScreenChar {
             ascii_character: b'#',
             color_code: self.color_code,
         };
-        
-        self.buffer.chars[row][col].write(player);
+        let blank = ScreenChar {
+            ascii_character: b' ',
+            color_code: self.color_code,
+        };
+
+        if space {
+            self.buffer.chars[row][col].write(blank);
+        } else {
+            self.buffer.chars[row][col].write(board);
+        }
     }
 }
 
@@ -203,8 +223,28 @@ pub fn draw_player(row: usize, col: usize) {
         color_code: ColorCode::new(Color::Yellow, Color::Black),
         buffer: unsafe {&mut *(0xb8000 as *mut Buffer)},
     };
-    
+
     writer.draw_player(row, col);
+}
+
+pub fn draw_board(player_x: usize, player_y: usize) {
+    let mut writer = Writer {
+        column_position: 0,
+        color_code: ColorCode::new(Color::Yellow, Color::Black),
+        buffer: unsafe {&mut *(0xb8000 as *mut Buffer)},
+    };
+
+    for y in 0..HEIGHT {
+        for x in 0..WIDTH {
+            if x == 0 || x == WIDTH-1 || y == 0 || y == HEIGHT-1 {
+                writer.draw_board(x, y, false);
+            } else if player_x == x && player_y == y {
+                continue;
+            } else {
+                writer.draw_board(x, y, true);
+            }
+        }
+    }
 }
 
 // pub fn print_something() {

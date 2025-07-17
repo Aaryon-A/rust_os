@@ -19,7 +19,31 @@ entry_point!(kernel_main);
 mod vga_buffer;
 mod serial;
 
-// static HELLO: &[u8] = b"Hello Rust!";
+enum Direction {
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT,
+    STOP,
+}
+
+struct ObjPos {
+    x: usize,
+    y: usize,
+    symbol: u8,
+    direction: Direction,
+}
+
+impl ObjPos {
+    fn create_player() -> ObjPos {
+        ObjPos {
+            x: 5,
+            y: 5,
+            symbol: b'@',
+            direction: Direction::STOP
+        }
+    }
+}
 
 #[unsafe(no_mangle)] // don't mangle the name of this function
 fn kernel_main(boot_info: &'static BootInfo) -> ! {
@@ -28,8 +52,11 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     #[cfg(test)]
     test_main();
 
+    let player = ObjPos::create_player();
+
     loop {
         vga_buffer::draw_player(5, 5);
+        vga_buffer::draw_board(player.x, player.y);
     }
 
     rust_os::hlt_loop();
