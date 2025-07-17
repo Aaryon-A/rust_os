@@ -47,8 +47,8 @@ struct ScreenChar {
 const BUFFER_HEIGHT: usize = 25;
 const BUFFER_WIDTH: usize = 80;
 
-const WIDTH: usize = 20;
-const HEIGHT: usize = 30;
+pub const WIDTH: usize = 30;
+pub const HEIGHT: usize = 20;
 
 #[repr(transparent)]
 struct Buffer {
@@ -237,11 +237,11 @@ pub fn draw_board(player_x: usize, player_y: usize) {
     for y in 0..HEIGHT {
         for x in 0..WIDTH {
             if x == 0 || x == WIDTH-1 || y == 0 || y == HEIGHT-1 {
-                writer.draw_board(x, y, false);
+                writer.draw_board(y, x, false);
             } else if player_x == x && player_y == y {
                 continue;
             } else {
-                writer.draw_board(x, y, true);
+                writer.draw_board(y, x, true);
             }
         }
     }

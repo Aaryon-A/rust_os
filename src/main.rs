@@ -13,6 +13,7 @@ use alloc::boxed::Box;
 use alloc::rc::Rc;
 use alloc::vec::Vec;
 use alloc::vec;
+use rust_os::interrupts::CHARACTER;
 
 entry_point!(kernel_main);
 
@@ -52,15 +53,48 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     #[cfg(test)]
     test_main();
 
-    let player = ObjPos::create_player();
+    let mut player = ObjPos::create_player();
 
     loop {
-        vga_buffer::draw_player(5, 5);
+        for _ in 0..502800 {}
+        vga_buffer::draw_player(player.y, player.x);
         vga_buffer::draw_board(player.x, player.y);
+        let mut character = CHARACTER.lock();
+
+        match character.to_ascii_lowercase() {
+            'w' => player.direction = Direction::UP,
+            'a' => player.direction = Direction::LEFT,
+            's' => player.direction = Direction::DOWN,
+            'd' => player.direction = Direction::RIGHT,
+            _ => {},
+        }
+
+        *character = 'u';
+
+        match player.direction {
+            Direction::UP => {
+                player.y -= 1;
+                if player.y <= 0 {player.y = vga_buffer::HEIGHT-2;}
+            }
+            Direction::DOWN => {
+                player.y += 1;
+                if player.y >= vga_buffer::HEIGHT-1 {player.y = 1;}
+            }
+            Direction::RIGHT => {
+                player.x += 1;
+                if player.x >= vga_buffer::WIDTH-1 {player.x = 1;}
+            }
+            Direction::LEFT => {
+                player.x -= 1;
+                if player.x <= 0 {player.x = vga_buffer::WIDTH-2;}
+            }
+            ref _other => {}
+        }
     }
 
     rust_os::hlt_loop();
 }
+
 /// This function is called on panic.
 #[cfg(not(test))]
 #[panic_handler]

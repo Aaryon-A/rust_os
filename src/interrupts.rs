@@ -5,7 +5,7 @@ use crate::{gdt, println, print, hlt_loop};
 use lazy_static::lazy_static;
 use pic8259::ChainedPics;
 use spin;
-
+use spin::Mutex;
 use crate::vga_buffer;
 
 pub const PIC_1_OFFSET: u8 = 32;
@@ -45,6 +45,10 @@ lazy_static! {
         idt[InterruptIndex::Keyboard.as_usize()].set_handler_fn(keyboard_interrupt_handler);
         idt
     };
+}
+
+lazy_static! {
+    pub static ref CHARACTER: Mutex<char> = Mutex::new('u'); 
 }
 
 pub fn init_idt() {
@@ -89,7 +93,10 @@ extern "x86-interrupt" fn keyboard_interrupt_handler(_stack_frame: InterruptStac
     if let Ok(Some(key_event)) = keyboard.add_byte(scancode) {
         if let Some(key) = keyboard.process_keyevent(key_event) {
             match key {
-                DecodedKey::Unicode(character) => print!("{}", character),
+                DecodedKey::Unicode(character) => {
+                    let mut char = CHARACTER.lock();
+                    *char = character;
+                },
                 DecodedKey::RawKey(key) => print!("{:?}", key),
             }
         }
