@@ -115,9 +115,9 @@ impl Writer {
         }
     }
 
-    fn draw_player(&mut self, row: usize, col: usize) {
+    fn draw_player(&mut self, row: usize, col: usize, character: u8) {
         let player = ScreenChar {
-            ascii_character: b'@',
+            ascii_character: character,
             color_code: self.color_code,
         };
 
@@ -217,14 +217,14 @@ pub fn clear_row(row: usize) {
     writer.clear_row(row);
 }
 
-pub fn draw_player(row: usize, col: usize) {
+pub fn draw_player(row: usize, col: usize, character: u8) {
     let mut writer = Writer {
         column_position: 0,
         color_code: ColorCode::new(Color::Yellow, Color::Black),
         buffer: unsafe {&mut *(0xb8000 as *mut Buffer)},
     };
 
-    writer.draw_player(row, col);
+    writer.draw_player(row, col, character);
 }
 
 pub fn draw_board(player_x: usize, player_y: usize) {

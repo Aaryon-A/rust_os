@@ -54,10 +54,11 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
     test_main();
 
     let mut player = ObjPos::create_player();
+    let mut game_flag = true;
 
-    loop {
+    while game_flag {
         for _ in 0..502800 {}
-        vga_buffer::draw_player(player.y, player.x);
+        vga_buffer::draw_player(player.y, player.x, player.symbol);
         vga_buffer::draw_board(player.x, player.y);
         let mut character = CHARACTER.lock();
 
@@ -66,6 +67,7 @@ fn kernel_main(boot_info: &'static BootInfo) -> ! {
             'a' => player.direction = Direction::LEFT,
             's' => player.direction = Direction::DOWN,
             'd' => player.direction = Direction::RIGHT,
+            'q' => game_flag = false,
             _ => {},
         }
 
